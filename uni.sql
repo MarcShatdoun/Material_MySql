@@ -1,3 +1,4 @@
+
 -- phpMyAdmin SQL Dump
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
@@ -10,8 +11,7 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
-
-
+use universidad2
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
@@ -1982,7 +1982,7 @@ CREATE TABLE `persona` (
   `nombre` varchar(25) NOT NULL,
   `apellido1` varchar(50) NOT NULL,
   `ciudad` varchar(25) NOT NULL,
-  `fecha_nacimiento` varchar(10) NOT NULL,
+  `fecha_nacimiento` DATE NOT NULL,
   `sexo` enum('H','M') NOT NULL,
   `casado` enum('N','S') NOT NULL DEFAULT 'N'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -2612,7 +2612,7 @@ CREATE TABLE `profesor` (
   `nombre` varchar(40) NOT NULL,
   `apellido1` varchar(60) NOT NULL,
   `ciudad` varchar(50) NOT NULL,
-  `fecha_nacimiento` date NOT NULL DEFAULT current_timestamp(),
+  `fecha_nacimiento` date NOT NULL,
   `sexo` char(1) NOT NULL,
   `id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -2753,3 +2753,151 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+ALTER TABLE alumno_asignatura CONVERT TO CHARACTER SET utf8mb4
+
+COLLATE utf8mb4_general_ci;
+
+ALTER TABLE alumnos CONVERT TO CHARACTER SET utf8mb4
+
+COLLATE utf8mb4_general_ci;
+
+ALTER TABLE asignatura CONVERT TO CHARACTER SET utf8mb4
+
+COLLATE utf8mb4_general_ci;
+
+ALTER TABLE curso_escolar CONVERT TO CHARACTER SET utf8mb4
+
+COLLATE utf8mb4_general_ci;
+
+ALTER TABLE departamento CONVERT TO CHARACTER SET utf8mb4
+
+COLLATE utf8mb4_general_ci;
+
+ALTER TABLE grado CONVERT TO CHARACTER SET utf8mb4
+
+COLLATE utf8mb4_general_ci;
+
+ALTER TABLE profesores CONVERT TO CHARACTER SET utf8mb4
+
+COLLATE utf8mb4_general_ci;
+
+ALTER TABLE tipos CONVERT TO CHARACTER SET utf8mb4
+
+COLLATE utf8mb4_general_ci;
+
+-- 1. 
+select nombre, apellido1
+from profesor
+order by nombre;
+
+-- 2. 
+select ciudad, apellido1
+from persona
+order by ciudad, apellido1 asc;
+
+-- 3.
+select nombre, apellido1
+from persona
+where ciudad = 'barcelona'
+order by nombre, apellido1 desc;
+
+-- 4.
+select nif, nombre, apellido1
+from persona pe
+left join alumno_se_matricula_asignatura asma
+on pe.id = asma.id_alumno
+where asma.id_alumno IS NULL;
+
+-- 5. 
+select nombre, id_alumno
+from persona pe
+right join alumno_se_matricula_asignatura asma
+on pe.id = asma.id_alumno
+where fecha_matriculacion = ? -- No hay este dato
+order by nombre;
+
+-- 6. 
+select pro.nombre, apellido1
+from profesor pro
+inner join asignatura asi on pro.id_profesor = asi.id_profesor
+inner join alumno_se_matricula_asignatura asma on asi.id = asma.id_asignatura
+inner join curso_escolar ce on asma.id_curso_escolar = ce.id
+where fecha_nacimiento != 0000-00-00 AND anyo_fin = 2019
+order by fecha_nacimiento asc
+LIMIT 1;
+
+-- 7. 
+select asi.nombre, count(*) as alumnos
+from  asignatura asi
+inner join alumno_se_matricula_asignatura asma 
+on asi.id = asma.id_asignatura
+inner join curso_escolar ce
+on asma.id_curso_escolar = ce.id
+where ce.anyo_inicio = 2016 -- cambiar el año para mostrar que asignatura tenia mas alumnos
+group by id_asignatura
+order by count(*) desc
+limit 1;
+
+-- 8
+
+select asi.nombre, count(*) as alumnas_mujeres
+from  asignatura asi
+inner join alumno_se_matricula_asignatura asma 
+on asi.id = asma.id_asignatura
+inner join persona pe
+on asma.id_alumno = pe.id
+where pe.sexo = 'M'
+group by id_asignatura
+order by count(*) desc
+LIMIT 1;
+
+-- 9.Asignatura con menos alumnos hombres en 2018
+select asi.nombre, count(*) 
+from asignatura asi
+inner join alumno_se_matricula_asignatura asma 
+on asi.id = asma.id_asignatura
+inner join curso_escolar ce
+on asma.id_curso_escolar = ce.id
+inner join persona pe
+on asma.id_alumno = pe.id
+where sexo = 'H' AND anyo_inicio = 2018
+group by id_asignatura
+order by count(*) asc;
+
+-- 10.Añade el alumno “John Wayne”, de Texas, sexo ‘O’, nif 98765432Z, nacido el 1 de febrero de 1999, y matricúlalo en las dos asignaturas de Javascript, “asignatura”
+INSERT INTO persona(nif, nombre, apellido1, ciudad, fecha_nacimiento, sexo) VALUES
+("98765432Z","John", "Wayne", "Texas", '1999-02-01', 'H');
+
+INSERT INTO alumno_se_matricula_asignatura(id_alumno,id_asignatura, id_curso_escolar) VALUES
+(1048,3, 5), (1048,5,5 );
+
+select * from  alumno_se_matricula_asignatura
+order by id_alumno desc;
+
+-- 11. Por un error, los alumnos de Sabadell se quedaron sin que constara su población. Debes incorporarla a la tabla.
+
+-- NO HAY POBLACION
+
+-- 12.	Muestra cantidad de alumnos de cada género.
+-- MUJERES
+SELECT count(*) 
+from persona 
+WHERE sexo = "M";
+
+-- HOMBRES
+SELECT count(*) 
+from persona 
+WHERE sexo != "M";
+
+-- 13.	Hay que actualizar la tabla alumnos. Resulta que aquellos de Girona, de sexo M y cuya fecha de nacimiento es 0000-00-00, nacieron todos el 1 de junio de 2001.
+
+UPDATE persona
+set fecha_nacimiento = '2001-06-01'
+where ciudad = 'GIRONA' AND sexo = 'M' AND fecha_nacimiento = '0000-00-00';
+
+
+select * from persona where ciudad = 'BARCELONA' AND sexo = 'M' AND fecha_nacimiento = '0000-00-00';
+
+
+
