@@ -2890,7 +2890,7 @@ SELECT count(*)
 from persona 
 WHERE sexo != "M";
 
--- 13.	Hay que actualizar la tabla alumnos. Resulta que aquellos de Girona, de sexo M y cuya fecha de nacimiento es 0000-00-00, nacieron todos el 1 de junio de 2001.
+-- 13.	Hay que actualizar la tabla alumnos. Resulta que aquellos de Barcelona (Anteriormente Girona), de sexo M y cuya fecha de nacimiento es 0000-00-00, nacieron todos el 1 de junio de 2001.
 
 UPDATE persona
 set fecha_nacimiento = '2001-06-01'
@@ -2898,6 +2898,70 @@ where ciudad = 'GIRONA' AND sexo = 'M' AND fecha_nacimiento = '0000-00-00';
 
 
 select * from persona where ciudad = 'BARCELONA' AND sexo = 'M' AND fecha_nacimiento = '0000-00-00';
+
+
+-- 14.	Qué profesor tiene más asignaturas. 
+
+select pro.nombre, count(*)
+from asignatura asi
+inner join profesor pro 
+on asi.id_profesor = pro.id_profesor
+group by asi.id_profesor
+order by count(*) desc
+limit 1;
+
+-- 15.	¿Cuántas profesoras hay de Barcelona (Antes Berlín)? (sólo mujeres)
+
+select count(*) as Profesores_de_Barcelona 
+from profesor 
+where ciudad = 'Barcelona' AND sexo = 'M';
+
+-- 16.	10 nombres de alumnos más usuales, ordenados de mayor a menor
+
+select nombre, count(*)
+from persona
+group by nombre
+order by count(*) desc, nombre asc
+limit 10;
+
+-- 17.	Ciudad con más alumnos hombres en 2016: ciudad, cantidad de alumnos 
+
+select pe.ciudad, count(*) as alumnos
+from curso_escolar ce 
+inner join alumno_se_matricula_asignatura asma
+on ce.id = asma.id_curso_escolar
+inner join persona pe
+on asma.id_alumno = pe.id
+where anyo_inicio = 2016 AND sexo = 'H'
+group by pe.ciudad;
+
+-- 18.	Las tres asignaturas con mayor número de alumnos inscritos en toda la historia de más a menos, indicando la cantidad: 
+-- Nombre de la asignatura, cantidad de alumnos
+
+select asi.nombre, count(*) as alumnos
+from asignatura asi
+inner join alumno_se_matricula_asignatura asma
+on asi.id = asma.id_asignatura
+group by asma.id_asignatura
+order by count(*) desc
+limit 3;
+
+-- 19.	Se ha decidido conceder una beca a los tres alumnos casados de mayor edad. Identifica quienes son, mostrando su nif, nombre y apellido1.
+
+select nif, nombre, apellido1
+from persona
+where casado = 's'AND fecha_nacimiento != 0000-00-00
+order by fecha_nacimiento
+limit 3;
+
+-- 20.	Mostrar por parejas los alumnos que viven en la misma ciudad. Deben aparecer los apellidos de cada uno y la ciudad, sin parejas duplicadas. El orden debe ser por el nombre de la ciudad y el apellido de la primera columna.
+
+select DISTINCT apellido1, apellido1, ciudad
+from persona
+ORDER BY ciudad ASC, apellido1 asc;
+
+
+
 
 
 
